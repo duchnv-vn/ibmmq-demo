@@ -45,7 +45,6 @@ const demo = async () => {
 
   const messageQueueDescriptor = new MQMD();
   messageQueueDescriptor.Format = MQC.MQFMT_STRING;
-  messageQueueDescriptor.;
 
   const putMessageOptions = new MQPMO();
   putMessageOptions.Options =
