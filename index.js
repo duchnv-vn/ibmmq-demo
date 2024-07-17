@@ -9,14 +9,15 @@ const {
   MQPMO,
   MQCSP,
   MQCD,
+  MQDLH,
 } = require('ibmmq');
+const { Buffer } = require('buffer');
 
 const MQ_SERVER_HOSTNAME = ''; // Message queue server hostname (eg. 9.110.182.197)
 const TCP_PORT = 1418; // Message queue server port
 const QUEUE_MANAGER = 'QM1'; // Queue manager
-const QUEUE_NAME = 'DEV.QUEUE.1'; // Queue name
 const CHANNEL_NAME = '';
-const INPUT_QUEUE = '';
+const INPUT_QUEUE = ''; // Input queue name
 const RNAME = ''; // Dest Queue
 const RQMNAME = ''; // Dest QMgr
 const TRANSMISSION_QUEUE = '';
@@ -34,9 +35,7 @@ const demo = async () => {
   const queueManager = await ConnxPromise(QUEUE_MANAGER, connectOptions);
 
   const objectDescriptor = new MQOD();
-  objectDescriptor.ResolvedQName = RNAME;
-  objectDescriptor.ResolvedQMgrName = RQMNAME;
-  objectDescriptor.ObjectName = QUEUE_NAME;
+  objectDescriptor.ObjectName = INPUT_QUEUE;
   const openOptions = MQC.MQOO_OUTPUT;
   const mqObject = await OpenPromise(
     queueManager,
@@ -45,14 +44,26 @@ const demo = async () => {
   );
 
   const messageQueueDescriptor = new MQMD();
+  messageQueueDescriptor.Format = MQC.MQFMT_STRING;
+  messageQueueDescriptor.;
+
   const putMessageOptions = new MQPMO();
   putMessageOptions.Options =
     MQC.MQPMO_NO_SYNCPOINT | MQC.MQPMO_NEW_MSG_ID | MQC.MQPMO_NEW_CORREL_ID;
+
+  const deadLetterHeader = new MQDLH();
+  deadLetterHeader.DestQName = RNAME;
+  deadLetterHeader.DestQMgrName = RQMNAME;
+
   const messageContent = `<xml></xml>`;
+  const fullMessage = Buffer.concat([
+    deadLetterHeader.getBuffer(),
+    Buffer.from(messageContent),
+  ]);
   await PutPromise(
     mqObject,
     messageQueueDescriptor,
     putMessageOptions,
-    messageContent
+    fullMessage
   );
 };
